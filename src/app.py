@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """A simple Flask app that echoes user input back to the user."""
 
+import json
+
 from flask import Flask, request
 
 from src.data_collector import data_collector
 
 app = Flask(__name__)
+data_collector.init_app(app)
+
+with app.app_context():
+    data_collector.db.create_all()
 
 @app.route("/")
 def main():
@@ -22,8 +28,8 @@ def query_streaming_api():
     """Queries the streaming API with the user's input."""
     movie_show_title = request.form.get("movie_show_title", "")
     # Here you would call your data collector function with the user's input
-    data_collector.search({"search_field": "name", "search_value": movie_show_title})
-    return "You entered: " + movie_show_title
+    response = data_collector.search({"search_field": "name", "search_value": movie_show_title})
+    return "You entered: " + movie_show_title + " - " + json.dumps(response)
 
 if __name__ == "__main__":
     app.run(debug=True)

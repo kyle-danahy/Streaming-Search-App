@@ -3,13 +3,16 @@ from datetime import datetime
 import urllib.request
 import json
 from urllib.parse import urlencode
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///StreamingSearchApp.sqlite3'
+# Create the SQLAlchemy object without binding to a Flask app yet.
+db = SQLAlchemy()
 
-db = SQLAlchemy(app)
+
+def init_app(app):
+    """Initialize the SQLAlchemy object with the Flask application."""
+    app.config.setdefault('SQLALCHEMY_DATABASE_URI', 'sqlite:///StreamingSearchApp.sqlite3')
+    db.init_app(app)
 
 
 class StreamingSearch(db.Model):
@@ -17,8 +20,16 @@ class StreamingSearch(db.Model):
     datetime = db.Column(db.DateTime, primary_key=True, default=datetime.now)
     search_query = db.Column(db.String(200), nullable=False)
 
+def write_results_to_db(data):
+    """Helper function to write search results to the database."""
+    search_query = json.dumps(data)
+    new_search = StreamingSearch(search_query=search_query)
+    db.session.add(new_search)
+    db.session.commit()
+
 def search(query):
-    """Helper function to perform a search using the Watchmode API."""
+    """Helper function to perform a search using the Watchmode API. Calls the API
+    and then writes the results to the database."""
     api_key = 'Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc'
     search_field = query['search_field']
     search_value = query['search_value']
@@ -33,4 +44,6 @@ def search(query):
 
     with urllib.request.urlopen(url) as response:
         data = json.loads(response.read().decode())
-        print(data)
+        # print(data)
+        write_results_to_db(data)
+        return data
