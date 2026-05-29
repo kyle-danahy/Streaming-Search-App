@@ -10,6 +10,8 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///StreamingSearchApp.sqlite3'
 
 db = SQLAlchemy(app)
+
+
 class StreamingSearch(db.Model):
     """Define the database model that is used to store the search query."""
     datetime = db.Column(db.DateTime, primary_key=True, default=datetime.now)

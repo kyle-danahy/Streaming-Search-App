@@ -19,7 +19,10 @@ def get_temperature():
     response = requests.get("https://weatherdbi.herokuapp.com/data/weather/boulder", timeout=10)
     return response.json()["currentConditions"]["temp"]["c"]
 
-"""In main we first get the current temperature and then create a new object that we can add to the database."""
+"""
+In main we first get the current temperature and then create a new object 
+that we can add to the database.
+"""
 if __name__ == "__main__":
     current_temperature = get_temperature()
     new_entry = Weather(temperature=current_temperature)

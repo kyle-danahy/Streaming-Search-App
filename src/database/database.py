@@ -6,6 +6,8 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Users.sqlite3'
 
 db = SQLAlchemy(app)
+
+
 class Users(db.Model):
     """A simple User model for demonstration purposes."""
     id = db.Column("User_ID", db.integer, primary_key=True)
