@@ -17,13 +17,13 @@ class TestEchoInput:
 
     def test_echo_input_with_normal_text(self, client):
         """Test echo_input with normal text input."""
-        response = client.post('/echo_user_input', data={'user_input': 'Hello World'})
+        response = client.post('/query_streaming_api', data={'movie_show_title': 'Breaking Bad'})
         assert response.status_code == 200
-        assert response.data.decode() == 'You entered: Hello World'
+        assert response.data.decode() == 'You entered: Breaking Bad'
 
     def test_echo_input_with_no_form_data(self, client):
         """Test echo_input when form data is missing."""
-        response = client.post('/echo_user_input', data={})
+        response = client.post('/query_streaming_api', data={})
         assert response.status_code == 200
         assert response.data.decode() == 'You entered: '
 
@@ -32,4 +32,4 @@ class TestEchoInput:
         response = client.get('/')
         assert response.status_code == 200
         assert b'<form' in response.data
-        assert b'user_input' in response.data
+        assert b'movie_show_title' in response.data
