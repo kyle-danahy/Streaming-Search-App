@@ -20,3 +20,6 @@ def echo_input():
     """Echoes the user input back to the user."""
     input_text = request.form.get("user_input", "")
     return "You entered: " + input_text
+
+if __name__ == "__main__":
+    app.run(debug=True)
