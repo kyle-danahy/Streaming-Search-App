@@ -89,7 +89,10 @@ def get_available_streaming_services(title_id):
 
     with urllib.request.urlopen(url) as response:
         data = json.loads(response.read().decode())
+        print("data:", data)
         for item in data:
+            print("item:", item)
             list_of_streaming_services.append(item.get('name'))
+            print("list_of_streaming_services:", list_of_streaming_services)
 
     return list_of_streaming_services

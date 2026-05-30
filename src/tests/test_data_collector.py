@@ -1,9 +1,12 @@
 """Unit tests for the data collector module."""
 
 import json
+from unittest.mock import MagicMock, patch
+
 import pytest
 from flask import Flask
 from src.data_collector.data_collector import (
+    get_available_streaming_services,
     write_results_to_db,
     db,
     StreamingSearch,
@@ -70,3 +73,27 @@ class TestWriteResultsToDb:
             record = StreamingSearch.query.first()
             assert isinstance(record.search_query, str)
             assert json.loads(record.search_query) == test_data
+
+
+class TestGetAvailableStreamingServices:
+    """Test suite for get_available_streaming_services()."""
+
+    def test_get_available_streaming_services_parses_service_names(self):
+        """Test that service names are extracted from the Watchmode API response."""
+        api_response = [
+            {'name': 'Netflix'},
+            {'name': 'Hulu'},
+        ]
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps(api_response).encode('utf-8')
+        mock_response.__enter__.return_value = mock_response
+        mock_response.__exit__.return_value = None
+
+        with patch('src.data_collector.data_collector.urllib.request.urlopen',
+                   return_value=mock_response) as mock_urlopen:
+            services = get_available_streaming_services(123)
+
+        assert services == ['Netflix', 'Hulu']
+        mock_urlopen.assert_called_once_with(
+            'https://api.watchmode.com/v1/title/123/sources/?apiKey=Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc'
+        )
