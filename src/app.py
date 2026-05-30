@@ -31,12 +31,13 @@ def query_streaming_api():
     data_collector.search({"search_field": "name", "search_value": movie_show_title})
     db_results = data_collector.get_most_recent_search()
     # print("db_results:", str(db_results.search_query))
-    return f'''
-        <div>
-            <p>You entered: {movie_show_title}</p>
-            <p>results from the database: {db_results.search_query}</p>
-        </div>
-        '''
+    return "You entered: " + movie_show_title + "<br>results from the database: " + str(db_results.search_query)
+    # return f'''
+    #     <div>
+    #         <p>You entered: {movie_show_title}</p>
+    #         <p>results from the database: {db_results.search_query}</p>
+    #     </div>
+    #     '''
 
 if __name__ == "__main__":
     app.run(debug=True)
