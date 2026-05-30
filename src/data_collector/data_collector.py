@@ -27,6 +27,10 @@ def write_results_to_db(data):
     db.session.add(new_search)
     db.session.commit()
 
+def get_most_recent_search():
+    """Helper function to get the most recent search query from the database."""
+    return StreamingSearch.query.order_by(StreamingSearch.datetime.desc()).first()
+
 def search(query):
     """Helper function to perform a search using the Watchmode API. Calls the API
     and then writes the results to the database."""

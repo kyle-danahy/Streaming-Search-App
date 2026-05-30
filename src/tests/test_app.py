@@ -21,12 +21,14 @@ class TestQueryStreamingApi:
         assert response.status_code == 200
         assert 'You entered: Breaking Bad' in response.data.decode()
 
+    # @pytest.mark.skip
     def test_query_streaming_api_with_no_form_data(self, client):
         """Test query_streaming_api when form data is missing."""
         response = client.post('/query_streaming_api', data={})
         assert response.status_code == 200
         assert response.data.decode() is not None
 
+    # @pytest.mark.skip
     def test_main_route_get(self, client):
         """Test the main route returns a form."""
         response = client.get('/')

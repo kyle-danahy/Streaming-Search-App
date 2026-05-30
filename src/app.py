@@ -29,8 +29,12 @@ def query_streaming_api():
     movie_show_title = request.form.get("movie_show_title", "")
     # Here you would call your data collector function with the user's input
     data_collector.search({"search_field": "name", "search_value": movie_show_title})
-    db_results = data_collector.StreamingSearch.query.all()
-    return "You entered: " + movie_show_title + " - results from the database: " + json.dumps(db_results)
+    db_results = data_collector.get_most_recent_search()
+    # print("db_results:", str(db_results.search_query))
+    return (
+        "You entered: " + movie_show_title
+        + " - results from the database: " + str(db_results.search_query)
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
