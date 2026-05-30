@@ -49,12 +49,14 @@ def write_individual_results(search_record):
     """Separate the individual results to the results table."""
     search_data = json.loads(search_record.search_query)
     for result in search_data.get('title_results', []):
+        result_id = result.get('id')
+        available_streaming_services = get_available_streaming_services(result_id)
         individual_result = IndividualResult(
             search_datetime=search_record.datetime,
             result_id=result.get('id'),
             result_name=result.get('name'),
             result_type=result.get('type'),
-            available_streaming_services=json.dumps(result.get('available_streaming_services', []))
+            available_streaming_services=json.dumps(available_streaming_services)
         )
         db.session.add(individual_result)
 
@@ -89,10 +91,7 @@ def get_available_streaming_services(title_id):
 
     with urllib.request.urlopen(url) as response:
         data = json.loads(response.read().decode())
-        print("data:", data)
         for item in data:
-            print("item:", item)
             list_of_streaming_services.append(item.get('name'))
-            print("list_of_streaming_services:", list_of_streaming_services)
 
-    return list_of_streaming_services
+    return list_of_streaming_services if list_of_streaming_services else ["Not Available"]
