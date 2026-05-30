@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """A simple Flask app that echoes user input back to the user."""
 
-import json
-
 from flask import Flask, request
 
 from src.data_collector import data_collector
@@ -18,7 +16,7 @@ def main():
     """Main page with a form to submit user input."""
     return '''
      <form action="/query_streaming_api" method="POST">
-         <input name="movie_show_title" type="text" placeholder="Enter a movie or show title">
+         <input name="movie_show_title" type="text" placeholder="Movie or Show Title">
          <input type="submit" value="Submit!">
      </form>
      '''
@@ -27,17 +25,31 @@ def main():
 def query_streaming_api():
     """Queries the streaming API with the user's input."""
     movie_show_title = request.form.get("movie_show_title", "")
-    # Here you would call your data collector function with the user's input
     data_collector.search({"search_field": "name", "search_value": movie_show_title})
     db_results = data_collector.get_most_recent_search()
-    # print("db_results:", str(db_results.search_query))
-    return "You entered: " + movie_show_title + "<br>results from the database: " + str(db_results.search_query)
-    # return f'''
-    #     <div>
-    #         <p>You entered: {movie_show_title}</p>
-    #         <p>results from the database: {db_results.search_query}</p>
-    #     </div>
-    #     '''
+    # print("db_results.search_query:", str(db_results.search_query))
+    # print("db_results.results:", str(db_results.results))
+    return f'''
+        <div>
+            <p>You entered: {movie_show_title}</p>
+            <p>query successful?: {db_results.search_query is not None}</p>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Available Streaming Services</th>
+                </tr>
+                {''.join(f"<tr>"
+                            f"<td>{result.result_name}</td>"
+                            f"<td>{result.result_type}</td>"
+                            f"<td>{result.available_streaming_services}</td>"
+                        f"</tr>"
+                        for result in db_results.results
+                    )
+                }
+            </table>
+        </div>
+        '''
 
 if __name__ == "__main__":
     app.run(debug=True)

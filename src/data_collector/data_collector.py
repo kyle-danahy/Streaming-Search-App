@@ -1,4 +1,5 @@
-"""Data collector module for the streaming search application."""
+"""Data collector module for the streaming search application. It sends a request
+to the Watchmode API and writes the results to a database."""
 from datetime import datetime
 import urllib.request
 import json
@@ -7,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 # Create the SQLAlchemy object without binding to a Flask app yet.
 db = SQLAlchemy()
+API_KEY = 'Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc'
 
 
 def init_app(app):
@@ -20,12 +22,41 @@ class StreamingSearch(db.Model):
     datetime = db.Column(db.DateTime, primary_key=True, default=datetime.now)
     search_query = db.Column(db.String(200), nullable=False)
 
+
+class IndividualResult(db.Model):
+    """Model to store individual results from a search."""
+    id = db.Column(db.Integer, primary_key=True)
+    search_datetime = db.Column(db.DateTime, db.ForeignKey('streaming_search.datetime'),
+                                nullable=False)
+    result_id = db.Column(db.Integer)
+    result_name = db.Column(db.String(200))
+    result_type = db.Column(db.String(50))
+    available_streaming_services = db.Column(db.String(500))
+
+    # optional relationship back to the search record
+    search = db.relationship('StreamingSearch', backref=db.backref('results', lazy=True))
+
 def write_results_to_db(data):
     """Helper function to write search results to the database."""
     search_query = json.dumps(data)
     new_search = StreamingSearch(search_query=search_query)
+    new_search.datetime = datetime.now()
     db.session.add(new_search)
+    write_individual_results(new_search)
     db.session.commit()
+
+def write_individual_results(search_record):
+    """Separate the individual results to the results table."""
+    search_data = json.loads(search_record.search_query)
+    for result in search_data.get('title_results', []):
+        individual_result = IndividualResult(
+            search_datetime=search_record.datetime,
+            result_id=result.get('id'),
+            result_name=result.get('name'),
+            result_type=result.get('type'),
+            available_streaming_services=json.dumps(result.get('available_streaming_services', []))
+        )
+        db.session.add(individual_result)
 
 def get_most_recent_search():
     """Helper function to get the most recent search query from the database."""
@@ -34,12 +65,11 @@ def get_most_recent_search():
 def search(query):
     """Helper function to perform a search using the Watchmode API. Calls the API
     and then writes the results to the database."""
-    api_key = 'Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc'
     search_field = query['search_field']
     search_value = query['search_value']
 
     params = {
-        'apiKey': api_key,
+        'apiKey': API_KEY,
         'search_field': search_field,
         'search_value': search_value
     }
@@ -48,6 +78,18 @@ def search(query):
 
     with urllib.request.urlopen(url) as response:
         data = json.loads(response.read().decode())
-        # print(data)
         write_results_to_db(data)
         return data
+
+def get_available_streaming_services(title_id):
+    """Helper function to query the Watchmode API for a list of available streaming
+    services for a selected title."""
+    url = f'https://api.watchmode.com/v1/title/{title_id}/sources/?apiKey={API_KEY}'
+    list_of_streaming_services = []
+
+    with urllib.request.urlopen(url) as response:
+        data = json.loads(response.read().decode())
+        for item in data:
+            list_of_streaming_services.append(item.get('name'))
+
+    return list_of_streaming_services
