@@ -13,6 +13,7 @@ from src.data_collector.data_collector import (
     StreamingSearch,
     init_app,
 )
+from src.database.database_helper import get_database_uri
 
 
 @pytest.fixture
@@ -36,6 +37,18 @@ def db_session(collector_app):
         yield db
         db.session.remove()
         db.drop_all()
+
+@pytest.fixture
+def pytest_configure(config):
+    """Ensure tests use the Docker Postgres database URL."""
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        database_url = get_database_uri()
+        os.environ['DATABASE_URL'] = database_url
+
+    if 'SQLALCHEMY_DATABASE_URI' not in os.environ:
+        os.environ['SQLALCHEMY_DATABASE_URI'] = database_url
+
 
 # TODO: replace REST calls with mocks
 class TestWriteResultsToDb:
