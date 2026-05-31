@@ -1,5 +1,6 @@
 """Unit tests for the data collector module."""
 
+import os
 import json
 from unittest.mock import Mock, patch
 
@@ -19,7 +20,9 @@ def collector_app():
     """Create a Flask app for testing."""
     app = Flask(__name__)
     app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+        'DATABASE_URL', 'postgresql://flaskuser:flaskpass@localhost:5432/flaskdb'
+    )
     init_app(app)
     return app
 
@@ -28,6 +31,7 @@ def collector_app():
 def db_session(collector_app):
     """Create a test database session."""
     with collector_app.app_context():
+        db.drop_all()
         db.create_all()
         yield db
         db.session.remove()
