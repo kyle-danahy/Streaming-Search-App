@@ -44,6 +44,7 @@ def query_streaming_api():
         title_results = json.loads(db_results.search_query).get("title_results", [])        
 
     ids = [result.get('id') for result in title_results]
+    print(f"Pulling {len(ids)} individual results from database...")
     if ids:
         individual_results = data_collector.IndividualResult.query.filter(
             data_collector.IndividualResult.result_id.in_(ids)
@@ -70,6 +71,7 @@ def query_streaming_api():
                     )
                 }
             </table>
+            <button onclick="window.location.href='/'">Go Back</button>
         </div>
         '''
 

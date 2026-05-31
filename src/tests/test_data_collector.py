@@ -1,7 +1,7 @@
 """Unit tests for the data collector module."""
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from flask import Flask
@@ -84,10 +84,10 @@ class TestGetAvailableStreamingServices:
             {'name': 'Netflix'},
             {'name': 'Hulu'},
         ]
-        mock_response = MagicMock()
+        mock_response = Mock()
         mock_response.read.return_value = json.dumps(api_response).encode('utf-8')
-        mock_response.__enter__.return_value = mock_response
-        mock_response.__exit__.return_value = None
+        mock_response.__enter__ = Mock(return_value=mock_response)
+        mock_response.__exit__ = Mock(return_value=None)
 
         with patch('src.data_collector.data_collector.urllib.request.urlopen',
                    return_value=mock_response) as mock_urlopen:

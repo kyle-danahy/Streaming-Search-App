@@ -15,6 +15,7 @@ def client():
 class TestQueryStreamingApi:
     """Test suite for the query_streaming_api() function."""
 
+    @pytest.mark.slow
     def test_query_streaming_api_with_normal_text(self, client):
         """Test query_streaming_api with normal text input."""
         response = client.post('/query_streaming_api', data={'movie_show_title': 'Breaking Bad'})

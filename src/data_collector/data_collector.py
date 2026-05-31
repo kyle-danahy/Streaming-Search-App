@@ -41,13 +41,17 @@ def write_results_to_db(data):
     search_query = json.dumps(data)
     new_search = StreamingSearch(search_query=search_query)
     new_search.datetime = datetime.now()
+    print("Adding new search to database...")
     db.session.add(new_search)
+    print("Parsing individual results...")
     write_individual_results(new_search)
+    print("Writing to database...")
     db.session.commit()
 
 def write_individual_results(search_record):
     """Separate the individual results to the results table."""
     search_data = json.loads(search_record.search_query)
+    result_counter = 0
     for result in search_data.get('title_results', []):
         result_id = result.get('id')
         available_streaming_services = get_available_streaming_services(result_id)
@@ -59,6 +63,8 @@ def write_individual_results(search_record):
             available_streaming_services=json.dumps(available_streaming_services)
         )
         db.session.add(individual_result)
+        result_counter += 1
+    print(f"Added {result_counter} individual results to the database.")
 
 def get_most_recent_search():
     """Helper function to get the most recent search query from the database."""
@@ -78,6 +84,7 @@ def search(query):
 
     url = f'https://api.watchmode.com/v1/search/?{urlencode(params)}'
 
+    print(f"Querying Watchmode API with URL: {url}")
     with urllib.request.urlopen(url) as response:
         data = json.loads(response.read().decode())
         write_results_to_db(data)
@@ -89,6 +96,7 @@ def get_available_streaming_services(title_id):
     url = f'https://api.watchmode.com/v1/title/{title_id}/sources/?apiKey={API_KEY}'
     list_of_streaming_services = []
 
+    print(f"Querying Watchmode API for streaming services with URL: {url}")
     with urllib.request.urlopen(url) as response:
         data = json.loads(response.read().decode())
         for item in data:
