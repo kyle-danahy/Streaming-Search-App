@@ -17,6 +17,25 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: flaskuser
+          POSTGRES_PASSWORD: flaskpass
+          POSTGRES_DB: flaskdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U flaskuser"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://flaskuser:flaskpass@localhost:5432/flaskdb
+      SQLALCHEMY_DATABASE_URI: postgresql://flaskuser:flaskpass@localhost:5432/flaskdb
+
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.10
