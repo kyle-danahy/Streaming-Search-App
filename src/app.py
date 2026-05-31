@@ -2,9 +2,13 @@
 """A simple Flask app that echoes user input back to the user."""
 
 import json
+from logging import getLogger, log
 from flask import Flask, request
 
 from src.data_collector import data_collector
+from src.database.database_helper import clear_database
+
+log = getLogger(__name__)
 
 app = Flask(__name__)
 data_collector.init_app(app)
@@ -15,11 +19,6 @@ with app.app_context():
 # Would not normally do this in production but implementing this as a simple cleanup function
 # In a "real" app I would add some checks to see if the record exists in the DB before writing
 # and maybe have a periodic cleanup to prevent the table from getting too cluttered
-def clear_database():
-    """Clear the search and individual result tables before a new API query."""
-    data_collector.db.session.query(data_collector.IndividualResult).delete()
-    data_collector.db.session.query(data_collector.StreamingSearch).delete()
-    data_collector.db.session.commit()
 
 
 @app.route("/")
@@ -36,15 +35,20 @@ def main():
 def query_streaming_api():
     """Queries the streaming API with the user's input."""
     movie_show_title = request.form.get("movie_show_title", "")
-    clear_database()
+    clear_database(
+        data_collector.db,
+        data_collector.IndividualResult,
+        data_collector.StreamingSearch
+    )
+
     data_collector.search({"search_field": "name", "search_value": movie_show_title})
     db_results = data_collector.get_most_recent_search()
     title_results = []
     if db_results and db_results.search_query:
-        title_results = json.loads(db_results.search_query).get("title_results", [])        
+        title_results = json.loads(db_results.search_query).get("title_results", [])
 
     ids = [result.get('id') for result in title_results]
-    print(f"Pulling {len(ids)} individual results from database...")
+    log.info("Pulling %s individual results from database...", len(ids))
     if ids:
         individual_results = data_collector.IndividualResult.query.filter(
             data_collector.IndividualResult.result_id.in_(ids)

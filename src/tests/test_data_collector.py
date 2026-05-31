@@ -33,7 +33,7 @@ def db_session(collector_app):
         db.session.remove()
         db.drop_all()
 
-
+# TODO: replace REST calls with mocks
 class TestWriteResultsToDb:
     """Test suite for the write_results_to_db() function."""
 
