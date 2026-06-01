@@ -10,6 +10,10 @@ if not os.environ.get('DYNO'):
     except ImportError:
         pass
 
+LOCAL_DATABASE_URL = (
+    'postgresql://flaskuser:flaskpass@localhost:5432/flaskdb'
+)
+
 
 def get_database_uri():
     """Return the database URI for SQLAlchemy.
@@ -32,7 +36,7 @@ def get_database_uri():
     postgres_user = os.environ.get('POSTGRES_USER', 'flaskuser')
     postgres_password = os.environ.get('POSTGRES_PASSWORD', 'flaskpass')
     postgres_db = os.environ.get('POSTGRES_DB', 'flaskdb')
-    postgres_host = os.environ.get('POSTGRES_HOST', 'postgres')
+    postgres_host = os.environ.get('POSTGRES_HOST', 'localhost')
     postgres_port = os.environ.get('POSTGRES_PORT', '5432')
 
     return (

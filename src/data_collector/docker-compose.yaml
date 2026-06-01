@@ -14,9 +14,7 @@ services:
       POSTGRES_USER: flaskuser
       POSTGRES_PASSWORD: flaskpass
       POSTGRES_DB: flaskdb
-      DATABASE_URL: postgresql://flaskuser:flaskpass@postgres:5432/flaskdb
-      SEARCH_FIELD: name
-      SEARCH_VALUE: Breaking Bad
+      DATABASE_URL: postgresql://flaskuser:flaskpass@localhost:5432/flaskdb
       WATCHMODE_API_KEY: ${WATCHMODE_API_KEY:-Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc}
 
 networks:

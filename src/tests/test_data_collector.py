@@ -1,6 +1,5 @@
 """Unit tests for the data collector module."""
 
-import os
 import json
 from unittest.mock import Mock, patch
 
@@ -13,7 +12,7 @@ from src.data_collector.data_collector import (
     StreamingSearch,
     init_app,
 )
-from src.database.database_helper import get_database_uri
+from src.database.database_helper import LOCAL_DATABASE_URL
 
 
 @pytest.fixture
@@ -21,9 +20,7 @@ def collector_app():
     """Create a Flask app for testing."""
     app = Flask(__name__)
     app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-        'DATABASE_URL', 'postgresql://flaskuser:flaskpass@localhost:5432/flaskdb'
-    )
+    app.config['SQLALCHEMY_DATABASE_URI'] = LOCAL_DATABASE_URL
     init_app(app)
     return app
 
@@ -37,18 +34,6 @@ def db_session(collector_app):
         yield db
         db.session.remove()
         db.drop_all()
-
-@pytest.fixture
-def pytest_configure(config):
-    """Ensure tests use the Docker Postgres database URL."""
-    database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        database_url = get_database_uri()
-        os.environ['DATABASE_URL'] = database_url
-
-    if 'SQLALCHEMY_DATABASE_URI' not in os.environ:
-        os.environ['SQLALCHEMY_DATABASE_URI'] = database_url
-
 
 # TODO: replace REST calls with mocks
 class TestWriteResultsToDb:
