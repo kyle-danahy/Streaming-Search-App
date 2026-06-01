@@ -2,25 +2,32 @@
 import os
 from pathlib import Path
 
-try:
-    from dotenv import load_dotenv
+if not os.environ.get('DYNO'):
+    try:
+        from dotenv import load_dotenv
 
-    load_dotenv(Path(__file__).resolve().parents[2] / '.env')
-except ImportError:
-    pass
+        load_dotenv(Path(__file__).resolve().parents[2] / '.env')
+    except ImportError:
+        pass
 
 
 def get_database_uri():
     """Return the database URI for SQLAlchemy.
 
     Priority order:
-    1. app config provides SQLALCHEMY_DATABASE_URI
-    2. environment variable SQLALCHEMY_DATABASE_URI / DATABASE_URL
-    3. Docker Postgres defaults from environment variables
+    1. environment variable SQLALCHEMY_DATABASE_URI / DATABASE_URL
+    2. Docker/local Postgres defaults from POSTGRES_* environment variables
     """
     configured_uri = os.environ.get('SQLALCHEMY_DATABASE_URI') or os.environ.get('DATABASE_URL')
     if configured_uri:
         return configured_uri.replace('postgres://', 'postgresql://', 1)
+
+    if os.environ.get('DYNO'):
+        raise RuntimeError(
+            'DATABASE_URL is not set on Heroku. Remove any localhost DATABASE_URL '
+            'config var and add Heroku Postgres: '
+            'heroku addons:create heroku-postgresql:essential-0'
+        )
 
     postgres_user = os.environ.get('POSTGRES_USER', 'flaskuser')
     postgres_password = os.environ.get('POSTGRES_PASSWORD', 'flaskpass')
