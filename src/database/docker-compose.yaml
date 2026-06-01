@@ -13,6 +13,12 @@ services:
       POSTGRES_DB: flaskdb
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - flask_app_network
+
+networks:
+  flask_app_network:
+    name: flask_app_network
 
 volumes:
   postgres_data:

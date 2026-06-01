@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 import os
+from pathlib import Path
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(Path(__file__).resolve().parents[2] / '.env')
+except ImportError:
+    pass
 
 
 def get_database_uri():

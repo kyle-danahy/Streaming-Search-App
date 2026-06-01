@@ -1,5 +1,6 @@
 """Data collector module for the streaming search application. It sends a request
 to the Watchmode API and writes the results to a database."""
+import os
 from datetime import datetime
 from logging import getLogger, log
 import urllib.request
@@ -13,7 +14,10 @@ log = getLogger(__name__)
 
 # Create the SQLAlchemy object without binding to a Flask app yet.
 db = SQLAlchemy()
-API_KEY = 'Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc'
+API_KEY = os.environ.get(
+    'WATCHMODE_API_KEY',
+    'Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc',
+)
 
 
 def init_app(app):

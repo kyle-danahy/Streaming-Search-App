@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  data_collector:
+    build:
+      context: ../..
+      dockerfile: src/data_collector/Dockerfile
+    networks:
+      - flask_app_network
+    environment:
+      DATABASE_URL: postgresql://flaskuser:flaskpass@my_flask_app_db:5432/flaskdb
+      SEARCH_FIELD: name
+      SEARCH_VALUE: Breaking Bad
+      WATCHMODE_API_KEY: ${WATCHMODE_API_KEY:-Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc}
+
+networks:
+  flask_app_network:
+    external: true
+    name: flask_app_network
