@@ -21,6 +21,7 @@ def main():
      <form action="/query_streaming_api" method="POST">
          <input name="movie_show_title" type="text" placeholder="Movie or Show Title">
          <input type="submit" value="Submit!">
+         <p>Select the streaming services you want to see results for:</p>
          <table>
             <tr>
                 <td><label><input type="checkbox" name="streaming_service" value="Netflix"> Netflix</label></td>
@@ -28,10 +29,13 @@ def main():
                 <td><label><input type="checkbox" name="streaming_service" value="Prime Video"> Prime Video</label></td>
                 <td><label><input type="checkbox" name="streaming_service" value="Disney+"> Disney+</label></td>
                 <td><label><input type="checkbox" name="streaming_service" value="Apple TV+"> Apple TV+</label></td>
+            </tr>
+            <tr>
                 <td><label><input type="checkbox" name="streaming_service" value="Peacock"> Peacock</label></td>
                 <td><label><input type="checkbox" name="streaming_service" value="Paramount+"> Paramount+</label></td>
                 <td><label><input type="checkbox" name="streaming_service" value="HBO Max"> HBO Max</label></td>
                 <td><label><input type="checkbox" name="streaming_service" value="Showtime"> Showtime</label></td>
+                <td><label><input type="checkbox" name="streaming_service" value="Starz"> Starz</label></td>
             </tr>
          </table>
      </form>
@@ -70,6 +74,14 @@ def query_streaming_api():
 
     return f'''
         <div>
+            <style>
+                table {{
+                    border-collapse: collapse;
+                }}
+                table, th, td {{
+                    border: 1px solid black;
+                }}
+            </style>
             <p>You entered: {movie_show_title}</p>
             <table>
                 <tr>
