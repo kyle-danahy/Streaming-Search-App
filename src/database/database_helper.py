@@ -26,13 +26,6 @@ def get_database_uri():
     if configured_uri:
         return configured_uri.replace('postgres://', 'postgresql://', 1)
 
-    if os.environ.get('DYNO'):
-        raise RuntimeError(
-            'DATABASE_URL is not set on Heroku. Remove any localhost DATABASE_URL '
-            'config var and add Heroku Postgres: '
-            'heroku addons:create heroku-postgresql:essential-0'
-        )
-
     postgres_user = os.environ.get('POSTGRES_USER', 'flaskuser')
     postgres_password = os.environ.get('POSTGRES_PASSWORD', 'flaskpass')
     postgres_db = os.environ.get('POSTGRES_DB', 'flaskdb')

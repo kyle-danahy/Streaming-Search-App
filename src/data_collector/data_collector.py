@@ -1,11 +1,14 @@
 """Data collector module for the streaming search application. It sends a request
 to the Watchmode API and writes the results to a database."""
-import os
-from datetime import datetime
-from logging import getLogger, log
-import urllib.request
 import json
+import os
+import sys
+import urllib.request
+from datetime import datetime
+from logging import basicConfig, getLogger, log
 from urllib.parse import urlencode
+
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from src.database.database_helper import get_database_uri
@@ -112,3 +115,36 @@ def get_available_streaming_services(title_id):
             list_of_streaming_services.append(item.get('name'))
 
     return list_of_streaming_services if list_of_streaming_services else ["Not Available"]
+
+
+def create_app():
+    """Create a minimal Flask app so SQLAlchemy can connect to Postgres."""
+    app = Flask(__name__)
+    init_app(app)
+    return app
+
+
+def main():
+    """Collect streaming search data and write results to the database."""
+    basicConfig(
+        level=os.environ.get('LOG_LEVEL', 'INFO'),
+        format='%(asctime)s %(levelname)s %(name)s: %(message)s',
+    )
+
+    search_field = os.environ.get('SEARCH_FIELD', 'name')
+    search_value = os.environ.get('SEARCH_VALUE')
+    if not search_value:
+        log.error('SEARCH_VALUE environment variable is required')
+        sys.exit(1)
+
+    app = create_app()
+    with app.app_context():
+        db.create_all()
+        log.info('Running search for %s=%r', search_field, search_value)
+        results = search({'search_field': search_field, 'search_value': search_value})
+        title_count = len(results.get('title_results', []))
+        log.info('Search completed with %s title results', title_count)
+
+
+if __name__ == '__main__':
+    main()

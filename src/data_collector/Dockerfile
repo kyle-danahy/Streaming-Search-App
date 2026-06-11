@@ -10,4 +10,4 @@ COPY src/ ./src/
 ENV PYTHONPATH=/app
 ENV DATABASE_URL=postgresql://flaskuser:flaskpass@postgres:5432/flaskdb
 
-CMD ["python", "-m", "src.data_collector"]
+CMD ["python", "-m", "src.data_collector.data_collector"]

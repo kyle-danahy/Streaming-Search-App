@@ -13,9 +13,6 @@ log = getLogger(__name__)
 app = Flask(__name__)
 data_collector.init_app(app)
 
-with app.app_context():
-    data_collector.db.create_all()
-
 # Would not normally do this in production but implementing this as a simple cleanup function
 # In a "real" app I would add some checks to see if the record exists in the DB before writing
 # and maybe have a periodic cleanup to prevent the table from getting too cluttered
@@ -59,7 +56,6 @@ def query_streaming_api():
     return f'''
         <div>
             <p>You entered: {movie_show_title}</p>
-            <p>query successful?: {db_results.search_query is not None}</p>
             <table>
                 <tr>
                     <th>Name</th>
@@ -80,4 +76,6 @@ def query_streaming_api():
         '''
 
 if __name__ == "__main__":
+    with app.app_context():
+        data_collector.db.create_all()
     app.run(debug=True)
