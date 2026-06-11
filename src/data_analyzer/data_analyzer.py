@@ -17,6 +17,7 @@ def parse_streaming_services(database_results, checked_boxes):
     if not checked_boxes:
         return list(database_results)
 
+    # TODO: make this return a bit prettier of a list.
     filtered_results = []
     for result in database_results:
         services = json.loads(result.available_streaming_services)

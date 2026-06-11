@@ -1,18 +1,23 @@
 """Unit tests for the data collector module."""
 
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from flask import Flask
 from src.data_collector.data_collector import (
     get_available_streaming_services,
+    search,
     write_results_to_db,
     db,
     StreamingSearch,
+    IndividualResult,
     init_app,
+    API_KEY,
 )
 from src.database.database_helper import LOCAL_DATABASE_URL
+from src.tests.conftest import make_mock_url_response
+from src.tests.test_data import TestData
 
 
 @pytest.fixture
@@ -35,6 +40,7 @@ def db_session(collector_app):
         db.session.remove()
         db.drop_all()
 
+
 class TestWriteResultsToDb:
     """Test suite for the write_results_to_db() function."""
 
@@ -45,7 +51,6 @@ class TestWriteResultsToDb:
         with collector_app.app_context():
             write_results_to_db(test_data)
 
-            # Query the database to verify the record was created
             records = StreamingSearch.query.all()
             assert len(records) == 1
             assert json.loads(records[0].search_query) == test_data
@@ -75,6 +80,42 @@ class TestWriteResultsToDb:
             assert isinstance(record.search_query, str)
             assert json.loads(record.search_query) == test_data
 
+    def test_write_results_to_db_stores_individual_results(self, db_session, collector_app):
+        """Test write_results_to_db stores individual results using mocked sources API."""
+        test_data = TestData.get_sample_search_results()
+
+        with patch(
+            'src.data_collector.data_collector.get_available_streaming_services',
+            return_value=['Netflix'],
+        ) as mock_get_services, collector_app.app_context():
+            write_results_to_db(test_data)
+
+            records = IndividualResult.query.all()
+            assert len(records) == 2
+            assert records[0].result_name == 'Breaking Bad'
+            assert json.loads(records[0].available_streaming_services) == ['Netflix']
+            assert mock_get_services.call_count == 2
+
+
+class TestSearch:
+    """Test suite for search()."""
+
+    def test_search_calls_watchmode_api_and_writes_results(
+        self, db_session, collector_app, mock_watchmode_api
+    ):
+        """Test search uses the Watchmode API and persists the response."""
+        search_payload = mock_watchmode_api['search_payload']
+
+        with collector_app.app_context():
+            results = search({'search_field': 'name', 'search_value': 'Breaking Bad'})
+
+        assert results == search_payload
+        mock_watchmode_api['urlopen'].assert_called_once()
+        called_url = mock_watchmode_api['urlopen'].call_args[0][0]
+        assert called_url.startswith('https://api.watchmode.com/v1/search/?')
+        assert f'apiKey={API_KEY}' in called_url
+        assert 'search_value=Breaking+Bad' in called_url
+
 
 class TestGetAvailableStreamingServices:
     """Test suite for get_available_streaming_services()."""
@@ -85,16 +126,14 @@ class TestGetAvailableStreamingServices:
             {'name': 'Netflix'},
             {'name': 'Hulu'},
         ]
-        mock_response = Mock()
-        mock_response.read.return_value = json.dumps(api_response).encode('utf-8')
-        mock_response.__enter__ = Mock(return_value=mock_response)
-        mock_response.__exit__ = Mock(return_value=None)
 
-        with patch('src.data_collector.data_collector.urllib.request.urlopen',
-                   return_value=mock_response) as mock_urlopen:
+        with patch(
+            'src.data_collector.data_collector.urllib.request.urlopen',
+            return_value=make_mock_url_response(api_response),
+        ) as mock_urlopen:
             services = get_available_streaming_services(123)
 
         assert services == ['Netflix', 'Hulu']
         mock_urlopen.assert_called_once_with(
-            'https://api.watchmode.com/v1/title/123/sources/?apiKey=Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc'
+            f'https://api.watchmode.com/v1/title/123/sources/?apiKey={API_KEY}'
         )

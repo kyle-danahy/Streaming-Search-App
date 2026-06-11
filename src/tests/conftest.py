@@ -1,11 +1,44 @@
+import json
 import os
 import subprocess
 import time
 from pathlib import Path
+from unittest.mock import Mock, patch
+
+import pytest
 
 from src.database.database_helper import LOCAL_DATABASE_URL
+from src.tests.test_data import TestData
 
 COMPOSE_FILE = Path(__file__).resolve().parents[1] / 'database' / 'docker-compose.yaml'
+
+
+def make_mock_url_response(payload):
+    """Build a mock urllib response for a JSON Watchmode API payload."""
+    mock_response = Mock()
+    mock_response.read.return_value = json.dumps(payload).encode('utf-8')
+    mock_response.__enter__ = Mock(return_value=mock_response)
+    mock_response.__exit__ = Mock(return_value=None)
+    return mock_response
+
+
+@pytest.fixture
+def mock_watchmode_api():
+    """Mock Watchmode search and streaming-service API calls."""
+    search_payload = TestData.get_sample_search_results()
+
+    with patch(
+        'src.data_collector.data_collector.urllib.request.urlopen',
+        return_value=make_mock_url_response(search_payload),
+    ) as mock_urlopen, patch(
+        'src.data_collector.data_collector.get_available_streaming_services',
+        side_effect=[['Netflix', 'Hulu'], ['Peacock', 'Amazon Prime']],
+    ) as mock_get_services:
+        yield {
+            'urlopen': mock_urlopen,
+            'get_available_streaming_services': mock_get_services,
+            'search_payload': search_payload,
+        }
 
 
 def _start_postgres():
