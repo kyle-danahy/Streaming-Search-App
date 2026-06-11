@@ -16,7 +16,7 @@ def _start_postgres():
     )
 
     """Sleep for 5 seconds to give the db time to boot."""
-    time.sleep(5)
+    time.sleep(3)
     result = subprocess.run(
         [
             'docker', 'compose', '-f', str(COMPOSE_FILE),

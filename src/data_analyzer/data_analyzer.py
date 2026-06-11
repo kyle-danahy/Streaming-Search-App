@@ -1,29 +1,26 @@
-"""This class will take the data collected by the data collector
-and format it into a more human readable format. It also will
-clean up any not so relevant results."""
-from src.data_collector.data_collector import get_most_recent_search
+"""This module parses data collected by the data collector based on user selections."""
+import json
 
-class DataAnalyzer:
-    """Provides methods to clean and filter the raw query data based on user selections"""
-    def __init__(self, data):
-        self.data = get_most_recent_search().search_query
+_app = None
 
-    def clean_data(self):
-        """This function will take the raw data from the data collector and
-        format it into a more human readable format. It will also clean up
-        any not so relevant results."""
-        # For now, we will just return the raw data. In the future, we can
-        # add more functionality to this function to clean up the data and
-        # make it more human readable.
-        filtered_data = self.filter_data(self.data)
-        return filtered_data
 
-    def filter_data(self, filter_criteria):
-        """This function will filter data, primarily removing results that
-        are not on the streaming service that the user selected or results that do
-        not match the users selections for type of content (movie, show, etc)."""
-        if filter_criteria:
-            parse_streaming_services = filter_criteria.get("streaming_services", [])
-            parse_content_types = filter_criteria.get("content_types", [])
+def init_app(app):
+    """Initialize the data analyzer with the Flask application."""
+    global _app
+    _app = app
 
-        return self.data
+
+def parse_streaming_services(database_results, checked_boxes):
+    """This function will parse the full list of results and return only the results
+    that are available on the streaming services the user selected. If the user
+    did not select any of the checkboxes, all results will be returned."""
+    if not checked_boxes:
+        return list(database_results)
+
+    filtered_results = []
+    for result in database_results:
+        services = json.loads(result.available_streaming_services)
+        if any(service in checked_boxes for service in services):
+            filtered_results.append(result)
+
+    return filtered_results

@@ -5,6 +5,7 @@ import json
 from logging import getLogger, log
 from flask import Flask, request
 
+from src.data_analyzer import data_analyzer
 from src.data_collector import data_collector
 from src.database.database_helper import clear_database
 
@@ -13,11 +14,6 @@ log = getLogger(__name__)
 app = Flask(__name__)
 data_collector.init_app(app)
 
-# Would not normally do this in production but implementing this as a simple cleanup function
-# In a "real" app I would add some checks to see if the record exists in the DB before writing
-# and maybe have a periodic cleanup to prevent the table from getting too cluttered
-
-
 @app.route("/")
 def main():
     """Main page with a form to submit user input."""
@@ -25,6 +21,19 @@ def main():
      <form action="/query_streaming_api" method="POST">
          <input name="movie_show_title" type="text" placeholder="Movie or Show Title">
          <input type="submit" value="Submit!">
+         <table>
+            <tr>
+                <td><label><input type="checkbox" name="streaming_service" value="Netflix"> Netflix</label></td>
+                <td><label><input type="checkbox" name="streaming_service" value="Hulu"> Hulu</label></td>
+                <td><label><input type="checkbox" name="streaming_service" value="Prime Video"> Prime Video</label></td>
+                <td><label><input type="checkbox" name="streaming_service" value="Disney+"> Disney+</label></td>
+                <td><label><input type="checkbox" name="streaming_service" value="Apple TV+"> Apple TV+</label></td>
+                <td><label><input type="checkbox" name="streaming_service" value="Peacock"> Peacock</label></td>
+                <td><label><input type="checkbox" name="streaming_service" value="Paramount+"> Paramount+</label></td>
+                <td><label><input type="checkbox" name="streaming_service" value="HBO Max"> HBO Max</label></td>
+                <td><label><input type="checkbox" name="streaming_service" value="Showtime"> Showtime</label></td>
+            </tr>
+         </table>
      </form>
      '''
 
@@ -47,11 +56,17 @@ def query_streaming_api():
     ids = [result.get('id') for result in title_results]
     log.info("Pulling %s individual results from database...", len(ids))
     if ids:
-        individual_results = data_collector.IndividualResult.query.filter(
+        database_results = data_collector.IndividualResult.query.filter(
             data_collector.IndividualResult.result_id.in_(ids)
         ).all()
+        # Create a list of all streaming services the user checked a box for.
+        checked_boxes = request.form.getlist("streaming_service")
+        
+        # Parse the full list of results and only return results that are available on a
+        # streaming service the user checked a box for.
+        results = data_analyzer.parse_streaming_services(database_results, checked_boxes)
     else:
-        individual_results = []
+        results = []
 
     return f'''
         <div>
@@ -67,7 +82,7 @@ def query_streaming_api():
                             f"<td>{result.result_type}</td>"
                             f"<td>{result.available_streaming_services}</td>"
                         f"</tr>"
-                        for result in individual_results
+                        for result in results
                     )
                 }
             </table>

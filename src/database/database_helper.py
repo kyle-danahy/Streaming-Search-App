@@ -38,6 +38,9 @@ def get_database_uri():
     )
 
 
+"""Would not normally do this in production but implementing this as a simple cleanup function
+In a "real" app I would add some checks to see if the record exists in the DB before writing
+and maybe have a periodic cleanup to prevent the table from getting too cluttered"""
 def clear_database(db, individual_result, streaming_search):
     """Clear the search and individual result tables before a new API query."""
     db.session.query(individual_result).delete()
