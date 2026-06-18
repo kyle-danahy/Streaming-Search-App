@@ -40,11 +40,15 @@ def mock_watchmode_api():
         side_effect=[['Netflix', 'Hulu'], ['Peacock', 'Amazon Prime']],
     ) as mock_get_services, patch(
         'src.data_collector.data_collector.send_api_results',
-    ) as mock_send_api_results:
+    ) as mock_send_api_results, patch(
+        'src.messaging.rabbit_consumer.consume_api_results',
+        return_value=search_payload,
+    ) as mock_consume_api_results:
         yield {
             'urlopen': mock_urlopen,
             'get_available_streaming_services': mock_get_services,
             'send_api_results': mock_send_api_results,
+            'consume_api_results': mock_consume_api_results,
             'search_payload': search_payload,
         }
 

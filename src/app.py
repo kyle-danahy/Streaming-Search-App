@@ -9,6 +9,7 @@ from src.data_analyzer import data_analyzer
 from src.data_collector import data_collector
 from src.database.database_helper import (
     clear_database,
+    consume_api_results_to_db,
     db,
     get_individual_results_by_ids,
     get_most_recent_search,
@@ -54,6 +55,7 @@ def query_streaming_api():
     clear_database()
 
     data_collector.search({"search_field": "name", "search_value": movie_show_title})
+    consume_api_results_to_db()
     db_results = get_most_recent_search()
     title_results = []
     if db_results and db_results.search_query:

@@ -67,6 +67,14 @@ def init_app(app):
     app.config.setdefault('SQLALCHEMY_DATABASE_URI', get_database_uri())
     db.init_app(app)
 
+def consume_api_results_to_db():
+    """Pull API results from RabbitMQ and write them to the database."""
+    from src.messaging.rabbit_consumer import consume_api_results
+
+    data = consume_api_results()
+    if data is not None:
+        write_results_to_db(data)
+
 def write_results_to_db(data):
     """Helper function to write search results to the database."""
     search_query = json.dumps(data)
