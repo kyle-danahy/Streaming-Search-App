@@ -60,6 +60,7 @@ def main():
             View Metrics on Grafana
         </button>
      </form>
+     <p>"Streaming data powered by Watchmode.com"</p>
      '''
 
 @app.route("/metrics")
@@ -129,6 +130,7 @@ def query_streaming_api():
                     View Metrics on Grafana
                 </button>
             </form>
+            <p>"Streaming data powered by Watchmode.com"</p>
         </div>
         '''
     except Exception:
