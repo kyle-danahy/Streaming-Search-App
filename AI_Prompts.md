@@ -4,3 +4,7 @@ I used the following AI prompts to assist me while developing:
 2. "how do I automatically start the database before running unit tests?"
 3. I had an "pika.exceptions.AMQPConnectionError" when running the app on Heroku, asked the AI to help diagnose this issue.
 4. Asked the AI to help write and/or clean up comments on multiple methods throughout the app.
+5. Asked the following to help implement and debug the configuration to view application metrics in grafana:
+    - How do I see data from this app on a grafana dashboard?
+    - How do I add metrics via Prometheus?
+    - How would I create a docker container setup to run Prometheus as a heroku app?

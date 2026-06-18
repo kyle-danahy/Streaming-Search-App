@@ -54,7 +54,9 @@ def main():
                 <td><label><input type="checkbox" name="streaming_service" value="Starz"> Starz</label></td>
             </tr>
          </table>
-         <a href="
+     </form>
+     <form action="https://streaming-search-grafana-ce17a8229c97.herokuapp.com/public-dashboards/e75312c18d414025997adee8da827ffd">
+        <input type="submit" value="View Metrics on Grafana">
      </form>
      '''
 
