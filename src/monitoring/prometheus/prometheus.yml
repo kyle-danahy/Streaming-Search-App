@@ -2,9 +2,15 @@ global:
   scrape_interval: 10s
 
 scrape_configs:
-  - job_name: streaming-search-app-heroku
-  scheme: https
-  metrics_path: /metrics
-  static_configs:
-    - targets:
-        - streaming-search-app-373a9f8fa5f5.herokuapp.com
+  - job_name: prometheus
+    scheme: https
+    static_configs:
+      - targets:
+          - streaming-search-prometheus.herokuapp.com
+
+  - job_name: streaming-search-app
+    scheme: https
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - streaming-search-app-373a9f8fa5f5.herokuapp.com

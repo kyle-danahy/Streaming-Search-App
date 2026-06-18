@@ -7,4 +7,9 @@ To check that the database is working you have 2 options:
 
 - Continuous Deployment is set up through Heroku, when a new commit is made to main in github Heroku will pick that up and re-deploy that.
 - Database is Postgres running as a docker container
-- To view Prometheus/Grafana, you can go to this link https://streaming-search-grafana-ce17a8229c97.herokuapp.com/d/prometheus-overview/prometheus-overview?orgId=1&from=now-1h&to=now&timezone=browser&refresh=10s (username=admin, password=password)
+- To view Prometheus/Grafana on Heroku:
+  - Grafana: https://streaming-search-grafana-ce17a8229c97.herokuapp.com (username=admin, password=password)
+  - Prometheus: https://streaming-search-prometheus.herokuapp.com
+  - App metrics dashboard: https://streaming-search-grafana-ce17a8229c97.herokuapp.com/d/streaming-search-metrics/streaming-search-metrics
+  - Prometheus overview dashboard: https://streaming-search-grafana-ce17a8229c97.herokuapp.com/d/prometheus-overview/prometheus-overview
+- Prometheus scrapes the deployed app at https://streaming-search-app-373a9f8fa5f5.herokuapp.com/metrics (see `src/monitoring/prometheus/prometheus.yml`).
