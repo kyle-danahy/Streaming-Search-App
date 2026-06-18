@@ -40,3 +40,15 @@ class TestQueryStreamingApi:
         assert response.status_code == 200
         assert b'<form' in response.data
         assert b'movie_show_title' in response.data
+
+
+class TestMetrics:
+    """Test suite for the Prometheus /metrics endpoint."""
+
+    def test_metrics_endpoint(self, client):
+        """Test /metrics returns Prometheus exposition format."""
+        response = client.get('/metrics')
+        assert response.status_code == 200
+        body = response.data.decode()
+        assert 'streaming_search_requests_total' in body
+        assert 'streaming_search_duration_seconds' in body

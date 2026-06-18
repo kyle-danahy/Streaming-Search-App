@@ -2,8 +2,11 @@
 """A simple Flask app that echoes user input back to the user."""
 
 import json
+import time
 from logging import getLogger, log
+
 from flask import Flask, request
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from src.data_analyzer import data_analyzer
 from src.data_collector import data_collector
@@ -14,6 +17,12 @@ from src.database.database_helper import (
     get_individual_results_by_ids,
     get_most_recent_search,
     init_app,
+)
+from src.monitoring.metrics import (
+    search_duration_seconds,
+    search_requests_total,
+    search_results_returned,
+    search_title_results,
 )
 
 log = getLogger(__name__)
@@ -45,36 +54,46 @@ def main():
                 <td><label><input type="checkbox" name="streaming_service" value="Starz"> Starz</label></td>
             </tr>
          </table>
+         <a href="
      </form>
      '''
+
+@app.route("/metrics")
+def metrics():
+    """Expose Prometheus metrics."""
+    return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
 
 @app.route("/query_streaming_api", methods=["POST"])
 def query_streaming_api():
     """Queries the streaming API with the user's input."""
+    start_time = time.perf_counter()
+    status = 'success'
     movie_show_title = request.form.get("movie_show_title", "")
-    clear_database()
 
-    data_collector.search({"search_field": "name", "search_value": movie_show_title})
-    consume_api_results_to_db()
-    db_results = get_most_recent_search()
-    title_results = []
-    if db_results and db_results.search_query:
-        title_results = json.loads(db_results.search_query).get("title_results", [])
+    try:
+        clear_database()
 
-    ids = [result.get('id') for result in title_results]
-    log.info("Pulling %s individual results from database...", len(ids))
-    if ids:
-        database_results = get_individual_results_by_ids(ids)
-        # Create a list of all streaming services the user checked a box for.
-        checked_boxes = request.form.getlist("streaming_service")
-        
-        # Parse the full list of results and only return results that are available on a
-        # streaming service the user checked a box for.
-        results = data_analyzer.parse_streaming_services(database_results, checked_boxes)
-    else:
-        results = []
+        data_collector.search({"search_field": "name", "search_value": movie_show_title})
+        consume_api_results_to_db()
+        db_results = get_most_recent_search()
+        title_results = []
+        if db_results and db_results.search_query:
+            title_results = json.loads(db_results.search_query).get("title_results", [])
 
-    return f'''
+        search_title_results.observe(len(title_results))
+
+        ids = [result.get('id') for result in title_results]
+        log.info("Pulling %s individual results from database...", len(ids))
+        if ids:
+            database_results = get_individual_results_by_ids(ids)
+            checked_boxes = request.form.getlist("streaming_service")
+            results = data_analyzer.parse_streaming_services(database_results, checked_boxes)
+        else:
+            results = []
+
+        search_results_returned.observe(len(results))
+
+        return f'''
         <div>
             <style>
                 table {{
@@ -103,6 +122,12 @@ def query_streaming_api():
             <button onclick="window.location.href='/'">Go Back</button>
         </div>
         '''
+    except Exception:
+        status = 'error'
+        raise
+    finally:
+        search_duration_seconds.observe(time.perf_counter() - start_time)
+        search_requests_total.labels(status=status).inc()
 
 if __name__ == "__main__":
     with app.app_context():
