@@ -14,6 +14,6 @@ USER grafana
 
 ENV GF_PATHS_PROVISIONING=/etc/grafana/provisioning
 ENV GF_USERS_ALLOW_SIGN_UP=false
-ENV PROMETHEUS_URL=https://streaming-search-prometheus.herokuapp.com
+ENV PROMETHEUS_URL=https://streaming-search-prometheus-8b66711fac46.herokuapp.com
 
 ENTRYPOINT ["/start-grafana.sh"]

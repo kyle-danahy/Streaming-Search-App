@@ -6,7 +6,7 @@ scrape_configs:
     scheme: https
     static_configs:
       - targets:
-          - streaming-search-prometheus.herokuapp.com
+          - streaming-search-prometheus-8b66711fac46.herokuapp.com
 
   - job_name: streaming-search-app
     scheme: https

@@ -1,6 +1,6 @@
 FROM prom/prometheus:v2.53.4
 
-COPY prometheus.yml /etc/prometheus/prometheus.yml
+COPY prometheus.yml.template /etc/prometheus/prometheus.yml.template
 COPY start-prometheus.sh /start-prometheus.sh
 
 USER root

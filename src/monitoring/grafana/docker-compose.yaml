@@ -6,7 +6,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      PROMETHEUS_URL: https://streaming-search-prometheus.herokuapp.com
+      PROMETHEUS_URL: https://streaming-search-prometheus-8b66711fac46.herokuapp.com
       GF_SECURITY_ADMIN_PASSWORD: admin
     networks:
       - localprom

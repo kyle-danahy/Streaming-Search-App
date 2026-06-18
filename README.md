@@ -9,7 +9,8 @@ To check that the database is working you have 2 options:
 - Database is Postgres running as a docker container
 - To view Prometheus/Grafana on Heroku:
   - Grafana: https://streaming-search-grafana-ce17a8229c97.herokuapp.com (username=admin, password=password)
-  - Prometheus: https://streaming-search-prometheus.herokuapp.com
+  - Prometheus: https://streaming-search-prometheus-8b66711fac46.herokuapp.com
+  - Prometheus targets: https://streaming-search-prometheus-8b66711fac46.herokuapp.com/targets
   - App metrics dashboard: https://streaming-search-grafana-ce17a8229c97.herokuapp.com/d/streaming-search-metrics/streaming-search-metrics
   - Prometheus overview dashboard: https://streaming-search-grafana-ce17a8229c97.herokuapp.com/d/prometheus-overview/prometheus-overview
 - Prometheus scrapes the deployed app at https://streaming-search-app-373a9f8fa5f5.herokuapp.com/metrics (see `src/monitoring/prometheus/prometheus.yml`).
