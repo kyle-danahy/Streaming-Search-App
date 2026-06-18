@@ -10,6 +10,8 @@ import pytest
 from src.database.database_helper import LOCAL_DATABASE_URL
 from src.tests.test_data import TestData
 
+os.environ.setdefault('WATCHMODE_API_KEY', 'test-api-key')
+
 COMPOSE_FILE = Path(__file__).resolve().parents[1] / 'database' / 'docker-compose.yaml'
 
 

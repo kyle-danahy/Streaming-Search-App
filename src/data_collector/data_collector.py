@@ -17,10 +17,7 @@ log = getLogger(__name__)
 
 # Create the SQLAlchemy object without binding to a Flask app yet.
 db = SQLAlchemy()
-API_KEY = os.environ.get(
-    'WATCHMODE_API_KEY',
-    'Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc',
-)
+API_KEY = os.environ.get('WATCHMODE_API_KEY')
 
 
 def init_app(app):
@@ -130,6 +127,10 @@ def main():
         level=os.environ.get('LOG_LEVEL', 'INFO'),
         format='%(asctime)s %(levelname)s %(name)s: %(message)s',
     )
+
+    if not API_KEY:
+        log.error('WATCHMODE_API_KEY environment variable is required')
+        sys.exit(1)
 
     search_field = os.environ.get('SEARCH_FIELD', 'name')
     search_value = os.environ.get('SEARCH_VALUE')

@@ -10,12 +10,13 @@ services:
       dockerfile: src/data_collector/Dockerfile
     networks:
       - flask_app_network
+    env_file:
+      - ../../.env
     environment:
       POSTGRES_USER: flaskuser
       POSTGRES_PASSWORD: flaskpass
       POSTGRES_DB: flaskdb
       DATABASE_URL: postgresql://flaskuser:flaskpass@localhost:5432/flaskdb
-      WATCHMODE_API_KEY: ${WATCHMODE_API_KEY:-Ueg5Sw7ZedERgV0pzRjKdPa30qCteVX9Iua6QtQc}
 
 networks:
   flask_app_network:
