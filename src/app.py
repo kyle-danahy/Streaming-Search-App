@@ -55,8 +55,10 @@ def main():
             </tr>
          </table>
      </form>
-     <form action="https://streaming-search-grafana-ce17a8229c97.herokuapp.com/public-dashboards/e75312c18d414025997adee8da827ffd">
-        <input type="submit" value="View Metrics on Grafana">
+     <form>
+        <button onclick="window.open('https://streaming-search-grafana-ce17a8229c97.herokuapp.com/public-dashboards/e75312c18d414025997adee8da827ffd', '_blank')">
+            View Metrics on Grafana
+        </button>
      </form>
      '''
 
@@ -122,6 +124,11 @@ def query_streaming_api():
                 }
             </table>
             <button onclick="window.location.href='/'">Go Back</button>
+            <form>
+                <button onclick="window.open('https://streaming-search-grafana-ce17a8229c97.herokuapp.com/public-dashboards/e75312c18d414025997adee8da827ffd', '_blank')">
+                    View Metrics on Grafana
+                </button>
+            </form>
         </div>
         '''
     except Exception:
