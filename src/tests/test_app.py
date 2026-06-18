@@ -1,17 +1,18 @@
 """Unit tests for the Flask app."""
 
 import pytest
-from src.app import app
+
+from src.database import database_helper
 
 
 @pytest.fixture
 def client():
     """Create a test client for the Flask app."""
+    from src.app import app
+
     app.config['TESTING'] = True
     with app.app_context():
-        from src.data_collector import data_collector
-
-        data_collector.db.create_all()
+        database_helper.db.create_all()
     with app.test_client() as test_client:
         yield test_client
 

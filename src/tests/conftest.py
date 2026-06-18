@@ -1,7 +1,10 @@
+import importlib.util
 import json
 import os
 import subprocess
+import sys
 import time
+import types
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -35,10 +38,13 @@ def mock_watchmode_api():
     ) as mock_urlopen, patch(
         'src.data_collector.data_collector.get_available_streaming_services',
         side_effect=[['Netflix', 'Hulu'], ['Peacock', 'Amazon Prime']],
-    ) as mock_get_services:
+    ) as mock_get_services, patch(
+        'src.data_collector.data_collector.send_api_results',
+    ) as mock_send_api_results:
         yield {
             'urlopen': mock_urlopen,
             'get_available_streaming_services': mock_get_services,
+            'send_api_results': mock_send_api_results,
             'search_payload': search_payload,
         }
 
@@ -50,7 +56,6 @@ def _start_postgres():
         check=True,
     )
 
-    """Sleep for 5 seconds to give the db time to boot."""
     time.sleep(3)
     result = subprocess.run(
         [
@@ -63,7 +68,9 @@ def _start_postgres():
     if result.returncode == 0:
         return
 
-    raise RuntimeError('Postgres did not become ready in time, try running again or increase the sleep time.')
+    raise RuntimeError(
+        'Postgres did not become ready in time, try running again or increase the sleep time.'
+    )
 
 
 def pytest_configure(config):

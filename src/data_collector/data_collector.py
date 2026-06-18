@@ -4,80 +4,15 @@ import json
 import os
 import sys
 import urllib.request
-from datetime import datetime
 from logging import basicConfig, getLogger, log
 from urllib.parse import urlencode
 
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-
-from src.database.database_helper import get_database_uri
+from src.messaging.rabbit_producer import send_api_results
 
 log = getLogger(__name__)
 
-# Create the SQLAlchemy object without binding to a Flask app yet.
-db = SQLAlchemy()
 API_KEY = os.environ.get('WATCHMODE_API_KEY')
 
-
-def init_app(app):
-    """Initialize the SQLAlchemy object with the Flask application."""
-    app.config.setdefault('SQLALCHEMY_DATABASE_URI', get_database_uri())
-    db.init_app(app)
-
-
-class StreamingSearch(db.Model):
-    """Define the database model that is used to store the search query."""
-    datetime = db.Column(db.DateTime, primary_key=True, default=datetime.now)
-    search_query = db.Column(db.Text, nullable=False)
-
-
-class IndividualResult(db.Model):
-    """Model to store individual results from a search."""
-    id = db.Column(db.Integer, primary_key=True)
-    search_datetime = db.Column(db.DateTime, db.ForeignKey('streaming_search.datetime'),
-                                nullable=False)
-    result_id = db.Column(db.Integer)
-    result_name = db.Column(db.String(200))
-    result_type = db.Column(db.String(50))
-    available_streaming_services = db.Column(db.String(500))
-
-    # optional relationship back to the search record
-    search = db.relationship('StreamingSearch', backref=db.backref('results', lazy=True))
-
-def write_results_to_db(data):
-    """Helper function to write search results to the database."""
-    search_query = json.dumps(data)
-    new_search = StreamingSearch(search_query=search_query)
-    new_search.datetime = datetime.now()
-    log.info("Adding new search to database...")
-    db.session.add(new_search)
-    log.info("Parsing individual results...")
-    write_individual_results(new_search)
-    log.info("Writing to database...")
-    db.session.commit()
-
-def write_individual_results(search_record):
-    """Separate the individual results to the results table."""
-    search_data = json.loads(search_record.search_query)
-    result_counter = 0
-    for result in search_data.get('title_results', []):
-        result_id = result.get('id')
-        available_streaming_services = get_available_streaming_services(result_id)
-        individual_result = IndividualResult(
-            search_datetime=search_record.datetime,
-            result_id=result.get('id'),
-            result_name=result.get('name'),
-            result_type=result.get('type'),
-            available_streaming_services=json.dumps(available_streaming_services)
-        )
-        db.session.add(individual_result)
-        result_counter += 1
-    log.info("Added %s individual results to the database.", result_counter)
-
-def get_most_recent_search():
-    """Helper function to get the most recent search query from the database."""
-    return StreamingSearch.query.order_by(StreamingSearch.datetime.desc()).first()
 
 def search(query):
     """Helper function to perform a search using the Watchmode API. Calls the API
@@ -95,9 +30,10 @@ def search(query):
 
     log.info("Querying Watchmode API with URL: %s", url)
     with urllib.request.urlopen(url) as response:
-        data = json.loads(response.read().decode())
-        write_results_to_db(data)
-        return data
+        results = json.loads(response.read().decode())
+        title_count = len(results.get('title_results', []))
+        log.info('Search completed with %s title results', title_count)
+        send_api_results(results)
 
 def get_available_streaming_services(title_id):
     """Helper function to query the Watchmode API for a list of available streaming
@@ -112,13 +48,6 @@ def get_available_streaming_services(title_id):
             list_of_streaming_services.append(item.get('name'))
 
     return list_of_streaming_services if list_of_streaming_services else ["Not Available"]
-
-
-def create_app():
-    """Create a minimal Flask app so SQLAlchemy can connect to Postgres."""
-    app = Flask(__name__)
-    init_app(app)
-    return app
 
 
 def main():
@@ -138,13 +67,8 @@ def main():
         log.error('SEARCH_VALUE environment variable is required')
         sys.exit(1)
 
-    app = create_app()
-    with app.app_context():
-        db.create_all()
-        log.info('Running search for %s=%r', search_field, search_value)
-        results = search({'search_field': search_field, 'search_value': search_value})
-        title_count = len(results.get('title_results', []))
-        log.info('Search completed with %s title results', title_count)
+    log.info('Running search for %s=%r', search_field, search_value)
+    search({'search_field': search_field, 'search_value': search_value})
 
 
 if __name__ == '__main__':

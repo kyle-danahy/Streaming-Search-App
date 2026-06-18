@@ -7,12 +7,18 @@ from flask import Flask, request
 
 from src.data_analyzer import data_analyzer
 from src.data_collector import data_collector
-from src.database.database_helper import clear_database
+from src.database.database_helper import (
+    clear_database,
+    db,
+    get_individual_results_by_ids,
+    get_most_recent_search,
+    init_app,
+)
 
 log = getLogger(__name__)
 
 app = Flask(__name__)
-data_collector.init_app(app)
+init_app(app)
 
 @app.route("/")
 def main():
@@ -45,14 +51,10 @@ def main():
 def query_streaming_api():
     """Queries the streaming API with the user's input."""
     movie_show_title = request.form.get("movie_show_title", "")
-    clear_database(
-        data_collector.db,
-        data_collector.IndividualResult,
-        data_collector.StreamingSearch
-    )
+    clear_database()
 
     data_collector.search({"search_field": "name", "search_value": movie_show_title})
-    db_results = data_collector.get_most_recent_search()
+    db_results = get_most_recent_search()
     title_results = []
     if db_results and db_results.search_query:
         title_results = json.loads(db_results.search_query).get("title_results", [])
@@ -60,9 +62,7 @@ def query_streaming_api():
     ids = [result.get('id') for result in title_results]
     log.info("Pulling %s individual results from database...", len(ids))
     if ids:
-        database_results = data_collector.IndividualResult.query.filter(
-            data_collector.IndividualResult.result_id.in_(ids)
-        ).all()
+        database_results = get_individual_results_by_ids(ids)
         # Create a list of all streaming services the user checked a box for.
         checked_boxes = request.form.getlist("streaming_service")
         
@@ -104,5 +104,5 @@ def query_streaming_api():
 
 if __name__ == "__main__":
     with app.app_context():
-        data_collector.db.create_all()
+        db.create_all()
     app.run(debug=True)

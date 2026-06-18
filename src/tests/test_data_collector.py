@@ -5,17 +5,20 @@ from unittest.mock import patch
 
 import pytest
 from flask import Flask
+
 from src.data_collector.data_collector import (
+    API_KEY,
     get_available_streaming_services,
     search,
-    write_results_to_db,
-    db,
-    StreamingSearch,
-    IndividualResult,
-    init_app,
-    API_KEY,
 )
-from src.database.database_helper import LOCAL_DATABASE_URL
+from src.database.database_helper import (
+    LOCAL_DATABASE_URL,
+    IndividualResult,
+    StreamingSearch,
+    db,
+    init_app,
+    write_results_to_db,
+)
 from src.tests.conftest import make_mock_url_response
 from src.tests.test_data import TestData
 
@@ -100,21 +103,21 @@ class TestWriteResultsToDb:
 class TestSearch:
     """Test suite for search()."""
 
-    def test_search_calls_watchmode_api_and_writes_results(
-        self, db_session, collector_app, mock_watchmode_api
+    def test_search_calls_watchmode_api_and_publishes_results(
+        self, collector_app, mock_watchmode_api
     ):
-        """Test search uses the Watchmode API and persists the response."""
+        """Test search uses the Watchmode API and publishes the response."""
         search_payload = mock_watchmode_api['search_payload']
 
         with collector_app.app_context():
-            results = search({'search_field': 'name', 'search_value': 'Breaking Bad'})
+            search({'search_field': 'name', 'search_value': 'Breaking Bad'})
 
-        assert results == search_payload
         mock_watchmode_api['urlopen'].assert_called_once()
         called_url = mock_watchmode_api['urlopen'].call_args[0][0]
         assert called_url.startswith('https://api.watchmode.com/v1/search/?')
         assert f'apiKey={API_KEY}' in called_url
         assert 'search_value=Breaking+Bad' in called_url
+        mock_watchmode_api['send_api_results'].assert_called_once_with(search_payload)
 
 
 class TestGetAvailableStreamingServices:
