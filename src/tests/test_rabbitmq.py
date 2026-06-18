@@ -3,8 +3,10 @@
 import json
 from unittest.mock import Mock, patch
 
+import pika
 import pytest
 
+import src.messaging.rabbit_connection as rabbit_connection
 import src.messaging.rabbit_consumer as rabbit_consumer
 import src.messaging.rabbit_producer as rabbit_producer
 from src.tests.test_data import TestData
@@ -93,7 +95,7 @@ class TestRabbitProducer:
         assert reconnected_channel is second_channel
         assert mock_blocking_connection.call_count == 2
 
-    @patch('src.messaging.rabbit_producer.pika.ConnectionParameters')
+    @patch('src.messaging.rabbit_connection.pika.ConnectionParameters')
     @patch('src.messaging.rabbit_producer.pika.BlockingConnection')
     def test_get_channel_uses_rabbitmq_host_env(
         self,
@@ -104,12 +106,58 @@ class TestRabbitProducer:
         monkeypatch,
     ):
         """Test _get_channel uses the RABBITMQ_HOST environment variable."""
+        monkeypatch.delenv('CLOUDAMQP_URL', raising=False)
+        monkeypatch.delenv('CLOUDAMQP_APIKEY', raising=False)
         monkeypatch.setenv('RABBITMQ_HOST', 'rabbit.example.com')
         mock_blocking_connection.return_value = mock_connection
 
         rabbit_producer._get_channel()
 
         mock_connection_parameters.assert_called_once_with(host='rabbit.example.com')
+
+    @patch('src.messaging.rabbit_connection.pika.URLParameters')
+    @patch('src.messaging.rabbit_producer.pika.BlockingConnection')
+    def test_get_channel_uses_cloudamqp_url(
+        self,
+        mock_blocking_connection,
+        mock_url_parameters,
+        mock_connection,
+        mock_channel,
+        monkeypatch,
+    ):
+        """Test _get_channel uses the CLOUDAMQP_URL environment variable."""
+        monkeypatch.setenv(
+            'CLOUDAMQP_URL',
+            'amqps://user:pass@host.example.com/vhost',
+        )
+        mock_url_parameters.return_value = Mock()
+        mock_blocking_connection.return_value = mock_connection
+
+        rabbit_producer._get_channel()
+
+        mock_url_parameters.assert_called_once_with(
+            'amqps://user:pass@host.example.com/vhost'
+        )
+
+
+class TestRabbitConnection:
+    """Test suite for rabbit_connection.py."""
+
+    @patch('src.messaging.rabbit_connection.pika.URLParameters')
+    def test_get_connection_parameters_uses_cloudamqp_apikey(
+        self, mock_url_parameters, monkeypatch
+    ):
+        """Test CLOUDAMQP_APIKEY overrides the password from CLOUDAMQP_URL."""
+        monkeypatch.setenv('CLOUDAMQP_URL', 'amqps://user:pass@host.example.com/vhost')
+        monkeypatch.setenv('CLOUDAMQP_APIKEY', 'secret-api-key')
+        parameters = Mock()
+        parameters.credentials = pika.PlainCredentials('user', 'pass')
+        mock_url_parameters.return_value = parameters
+
+        rabbit_connection.get_connection_parameters()
+
+        assert parameters.credentials.username == 'user'
+        assert parameters.credentials.password == 'secret-api-key'
 
 
 class TestRabbitConsumer:

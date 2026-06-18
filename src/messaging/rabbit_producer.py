@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import json
-import os
 
 import pika
+
+from src.messaging.rabbit_connection import get_connection_parameters
 
 _connection = None
 _channel = None
@@ -12,8 +13,7 @@ def _get_channel():
     """Establish a connection to RabbitMQ when publishing is needed."""
     global _connection, _channel
     if _channel is None or _channel.is_closed:
-        host = os.environ.get('RABBITMQ_HOST', 'localhost')
-        _connection = pika.BlockingConnection(pika.ConnectionParameters(host=host))
+        _connection = pika.BlockingConnection(get_connection_parameters())
         _channel = _connection.channel()
     return _channel
 
